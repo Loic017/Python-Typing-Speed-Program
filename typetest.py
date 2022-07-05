@@ -1,5 +1,6 @@
 import curses
 from curses import wrapper
+import time
 
 def start_screen(stdscr):
     stdscr.clear() # Clear Screen
@@ -8,24 +9,40 @@ def start_screen(stdscr):
     stdscr.refresh() # Refresh screen, update it to add the string
     stdscr.getkey() # Get the key input from the user
 
+def display_text(stdscr, target, current, wpm=0): # wpm is an optional parameter
+        stdscr.addstr(target)
+        stdscr.addstr(1, 0, f"WPM: {wpm}")
+
+        for i,char in enumerate(current): # Enumerate passes element AND index
+            correct_char = target[i]
+            color = curses.color_pair(1)
+            if char != correct_char:
+                color = curses.color_pair(2)
+            stdscr.addstr(0, i, char, color)
+
 def wpm_test(stdscr):
     target_text = "Hello this is some test text."
     inputted_text = []
-    stdscr.clear()
-    stdscr.addstr(target_text)
-    stdscr.refresh()        
-    stdscr.getkey()
+    #stdscr.clear()
+    #stdscr.addstr(target_text)
+    #stdscr.refresh()        
+    #stdscr.getkey()
+    wpm = 0
+    start_time = time.time()
+    stdscr.nodelay(True)
     
     while True:
+        time_elapsed = max(time.time() - start_time, 1)
+        wpm = round((len(inputted_text)/ (time_elapsed/60))/5)
+        
         stdscr.clear()
-        stdscr.addstr(target_text)
-
-        for char in inputted_text:
-            stdscr.addstr(char, curses.color_pair(1))
-            
+        display_text(stdscr, target_text, inputted_text, wpm)
         stdscr.refresh()
         
-        key = stdscr.getkey()   
+        try:
+            key = stdscr.getkey()
+        except:
+            continue
         
         if ord(key) == 27: # ASCII representation for escape
             break # Break if user presses escape
@@ -33,9 +50,8 @@ def wpm_test(stdscr):
         if key in ("KEY_BACKSPACE", '\b', "\x7f"): # Representation of backspace
             if len(inputted_text) > 0:
                 inputted_text.pop()
-        else:
+        elif len(inputted_text) < len(target_text):
             inputted_text.append(key)
-    
     
 def main(stdscr):
     # Terminal text colours
