@@ -1,11 +1,12 @@
 import curses
 from curses import wrapper
 import time
+import random
 
 def start_screen(stdscr):
     stdscr.clear() # Clear Screen
     stdscr.addstr("Speed Typing Test") # Add string to screen
-    stdscr.addstr("\nPress any key to START!")
+    stdscr.addstr("\nPress any key to start! >>")
     stdscr.refresh() # Refresh screen, update it to add the string
     stdscr.getkey() # Get the key input from the user
 
@@ -20,8 +21,14 @@ def display_text(stdscr, target, current, wpm=0): # wpm is an optional parameter
                 color = curses.color_pair(2)
             stdscr.addstr(0, i, char, color)
 
+def load_text():
+    with open("text.txt", "r") as f:
+        lines = f.readlines()
+        return random.choice(lines).strip()
+        
+    
 def wpm_test(stdscr):
-    target_text = "Hello this is some test text."
+    target_text = load_text()
     inputted_text = []
     #stdscr.clear()
     #stdscr.addstr(target_text)
@@ -39,6 +46,10 @@ def wpm_test(stdscr):
         display_text(stdscr, target_text, inputted_text, wpm)
         stdscr.refresh()
         
+        if target_text == "".join(inputted_text):
+            stdscr.nodelay(False)
+            break
+            
         try:
             key = stdscr.getkey()
         except:
@@ -60,7 +71,15 @@ def main(stdscr):
     curses.init_pair(3, curses.COLOR_WHITE, curses.COLOR_BLACK)
 
     start_screen(stdscr)
-    wpm_test(stdscr)
+    while True:
+        wpm_test(stdscr)
+        
+        stdscr.addstr(2, 0, "Text Completed. \n\nPress any ESC to exit. \nPress anything else to continue. \n>>")
+        key = stdscr.getkey()
+        
+        if ord(key) == 27:
+            break
+        
 
 wrapper(main)
     
